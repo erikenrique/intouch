@@ -15,13 +15,16 @@ var cookieParser = require('cookie-parser');
 var bodyParser   = require('body-parser');
 var session      = require('express-session');
 
+require('dontenv').config()
+
 var configDB = require('./config/database.js');
 
 var db
 
 // configuration ===============================================================
-mongoose.connect(configDB.url, (err, database) => {
+mongoose.connect(process.env.DB_URL, (err, database) => {
   if (err) return console.log(err)
+    console.log("hello!", process.env.DB_NAME)
   db = database
   require('./app/routes.js')(app, passport, db);
 }); // connect to our database

@@ -1,7 +1,26 @@
 body{
   padding-top:80px;
   word-wrap:break-word;
+  background: linear-gradient(#cd9bff,rgb(255, 255, 150));
+  min-height: 100vh;
 }
-img{
-  height: 200px;
+
+.jumbotron {
+  background: none;
+}
+
+.logo-container {
+  margin: auto;
+  display: flex;
+  align-items: center;
+}
+
+.logo-container img {
+  display: block;
+  height: auto;
+  margin: auto;
+}
+
+.logo-container img:nth-child(1){
+  width: 30%;
 }

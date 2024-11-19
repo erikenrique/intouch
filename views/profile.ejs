@@ -1,68 +1,193 @@
 <!doctype html>
 <html>
-<head>
-    <title>21 Savage Fan Site</title>
-    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.min.css">
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-<div class="container">
 
+<head>
+  <title>inTouch - Networking Contacts</title>
+  <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.min.css">
+  <link rel="shortcut icon" href="favicon.ico">
+  <link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+  <div class="container">
     <div class="page-header text-center">
-        <h1><span class="fa fa-anchor"></span> Profile Page</h1>
-        <a href="/logout" class="btn btn-default btn-sm">Logout</a>
+      <div class="logo-container">
+        <img src="img/intouch-logotype-Photoroom.png" alt="intouch Logotype">
+      </div>
+      <a href="/logout" class="btn btn-default btn-sm">Logout</a>
     </div>
 
-    <div class="row">
-
-        <!-- LOCAL INFORMATION -->
-        <div class="col-sm-6">
-            <div class="well">
-                <h3><span class="fa fa-user"></span> Local</h3>
-
-                <% if (user.local.email) { %>
-                    <p>
-                        <strong>id</strong>: <%= user._id %><br>
-                        <strong>email</strong>: <%= user.local.email %><br>
-                        <strong>password</strong>: <%= user.local.password %>
-                    </p>
-
-                    <a href="/unlink/local" class="btn btn-default">Unlink</a>
-                <% } else { %>
-                    <a href="/connect/local" class="btn btn-default">Connect Local</a>
+    <!-- Contacts Table -->
+    <h2>Your folks:</h2>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Job Title</th>
+          <th>Company</th>
+          <th>Where You Met</th>
+          <th>When You Met</th>
+          <th>Last Messaged</th>
+          <th># of Conversations</th>
+          <th>Comments</th>
+          <th>Social Links</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (contacts.length> 0) { %>
+          <% contacts.forEach(contact=> { %>
+            <tr>
+              <td><%= contact.name %></td>
+              <td><%= contact.jobTitle %></td>
+              <td><%= contact.company %></td>
+              <td><%= contact.whereMet %></td>
+              <td><%= contact.whenMet %></td>
+              <td><%= contact.lastMessaged %></td>
+              <td><%= contact.numConversations %></td>
+              <td><%= contact.comments %></td>
+              <td>
+                <% if (contact.twitter) { %>
+                  <a href="<%= contact.twitter %>" target="_blank">
+                    <i class="fa fa-twitter"></i>
+                  </a>
+                  <% } %>
+                    <% if (contact.linkedin) { %>
+                      <a href="<%= contact.linkedin %>" target="_blank">
+                        <i class="fa fa-linkedin"></i>
+                      </a>
+                      <% } %>
+              </td>
+              <td>
+                <button class="btn btn-danger btn-sm delete-contact" data-id="<%= contact._id %>">Delete</button>
+                <button class="btn btn-warning btn-sm edit-contact" data-id="<%= contact._id %>">Edit</button>
+                <button class="btn btn-success btn-sm save-contact" style="display: none;" data-id="<%= contact._id %>">Save</button>
+            </td>
+            </tr>
+            <% }); %>
+              <% } else { %>
+                <tr>
+                  <td colspan="10" class="text-center">No contacts found. Add a new contact below!</td>
+                </tr>
                 <% } %>
+      </tbody>
+    </table>
 
+
+    <!-- ADD CONTACT -->
+
+    <h2>Add a contact</h2>
+    <form action="/contacts" method="POST">
+      <div class="form-group">
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" class="form-control" required>
+      </div>
+      <div class="form-group">
+        <label for="jobTitle">Job Title:</label>
+        <input type="text" id="jobTitle" name="jobTitle" class="form-control">
+      </div>
+      <div class="form-group">
+        <label for="company">Company:</label>
+        <input type="text" id="company" name="company" class="form-control">
+      </div>
+      <div class="form-group">
+        <label for="whereMet">Where You Met:</label>
+        <input type="text" id="whereMet" name="whereMet" class="form-control">
+      </div>
+      <div class="form-group">
+        <label for="whenMet">When You Met:</label>
+        <input type="date" id="whenMet" name="whenMet" class="form-control">
+      </div>
+      <div class="form-group">
+        <label for="lastMessaged">Last Messaged:</label>
+        <input type="date" id="lastMessaged" name="lastMessaged" class="form-control">
+      </div>
+      <div class="form-group">
+        <label for="numConversations"># of Conversations:</label>
+        <input type="number" id="numConversations" name="numConversations" class="form-control">
+      </div>
+      <div class="form-group">
+        <label for="comments">Comments:</label>
+        <textarea id="comments" name="comments" class="form-control"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="twitter">Twitter:</label>
+        <input type="url" id="twitter" name="twitter" class="form-control">
+      </div>
+      <div class="form-group">
+        <label for="linkedin">LinkedIn:</label>
+        <input type="url" id="linkedin" name="linkedin" class="form-control">
+      </div>
+      <button type="submit" class="btn btn-primary">Add Contact</button>
+    </form>
+  </div>
+
+<!-- EDIT CONTACT -->
+  <div class="modal fade" id="editContactModal" tabindex="-1" aria-labelledby="editContactModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form id="edit-contact-form">
+          <div class="modal-header">
+            <h5 class="modal-title" id="editContactModalLabel">Edit contact</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" id="edit-contact-id">
+            <div class="form-group">
+              <label for="edit-name">Name:</label>
+              <input type="text" id="edit-name" class="form-control" required>
             </div>
-        </div>
-        <div class="col-sm-6">
-          <h3>Messages</h3>
-          <ul class="messages">
-          <% for(var i=0; i<messages.length; i++) {%>
-            <li class="message">
-              <span><%= messages[i].name %></span>
-              <span><%= messages[i].msg %></span>
-              <span><%= messages[i].thumbUp %></span>
-              <span><i class="fa fa-thumbs-up" aria-hidden="true"></i></span>
-              <span><i class="fa fa-thumbs-down" aria-hidden="true"></i></span>
-              <span><i class="fa fa-trash" aria-hidden="true"></i></span>
-            </li>
-          <% } %>
-          </ul>
+            <div class="form-group">
+              <label for="edit-jobTitle">Job Title:</label>
+              <input type="text" id="edit-jobTitle" class="form-control">
+            </div>
+            <div class="form-group">
+              <label for="edit-company">Company:</label>
+              <input type="text" id="edit-company" class="form-control">
+            </div>
+            <div class="form-group">
+              <label for="edit-whereMet">Where You Met:</label>
+              <input type="text" id="edit-whereMet" class="form-control">
+            </div>
+            <div class="form-group">
+              <label for="edit-whenMet">When You Met:</label>
+              <input type="date" id="edit-whenMet" class="form-control">
+            </div>
+            <div class="form-group">
+              <label for="edit-lastMessaged">Last Messaged:</label>
+              <input type="date" id="edit-lastMessaged" class="form-control">
+            </div>
+            <div class="form-group">
+              <label for="edit-numConversations"># of Conversations:</label>
+              <input type="number" id="edit-numConversations" class="form-control">
+            </div>
+            <div class="form-group">
+              <label for="edit-comments">Comments:</label>
+              <textarea id="edit-comments" class="form-control"></textarea>
+            </div>
+            <div class="form-group">
+              <label for="edit-twitter">Twitter:</label>
+              <input type="url" id="edit-twitter" class="form-control">
+            </div>
+            <div class="form-group">
+              <label for="edit-linkedin">LinkedIn:</label>
+              <input type="url" id="edit-linkedin" class="form-control">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-primary">Save changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 
-          <h2>Add a message</h2>
-        <% if (user.local.email) { %>
-          <form action="/messages" method="POST">
-            <input type="text" value="<%= user.local.email %>" name="name">
-            <input type="text" placeholder="message" name="msg">
-            <button type="submit">Submit</button>
-          </form>
-        </div>
-        <% } %>
 
-</div>
-
-<script src="main.js"></script>
-
+  <script src="main.js"></script>
 </body>
+
 </html>

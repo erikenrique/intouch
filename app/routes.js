@@ -1,117 +1,127 @@
-module.exports = function(app, passport, db) {
+module.exports = function (app, passport, db) {
 
-// normal routes ===============================================================
+  app.get('/', function (req, res) {
+    res.render('index.ejs');
+  });
 
-    // show the home page (will also have our login links)
-    app.get('/', function(req, res) {
-        res.render('index.ejs');
-    });
-
-    // PROFILE SECTION =========================
-    app.get('/profile', isLoggedIn, function(req, res) {
-        db.collection('messages').find().toArray((err, result) => {
-          if (err) return console.log(err)
-          res.render('profile.ejs', {
-            user : req.user,
-            messages: result
-          })
-        })
-    });
-
-    // LOGOUT ==============================
-    app.get('/logout', function(req, res) {
-        req.logout(() => {
-          console.log('User has logged out!')
+  app.get('/profile', isLoggedIn, (req, res) => {
+    db.collection('contacts')
+      .find({ userId: req.user._id }) // getting contacts for only that logged in user
+      .toArray((err, contacts) => {
+        if (err) return console.error(err);
+        res.render('profile.ejs', {
+          user: req.user,
+          contacts
         });
-        res.redirect('/');
+      });
+  });
+
+
+  app.get('/contacts/:id', isLoggedIn, (req, res) => {
+    const contactId = new require('mongodb').ObjectID(req.params.id);
+    db.collection('contacts').findOne({ _id: contactId, userId: req.user._id }, (err, contact) => {
+      if (err) return res.send(err);
+      res.json(contact);
     });
+  });
 
-// message board routes ===============================================================
+  // ADD A CONTACT /////////////////////////////////////////////////////////////////////
+  app.post('/contacts', isLoggedIn, (req, res) => {
+    const contact = {
+      userId: req.user._id, 
+      name: req.body.name,
+      jobTitle: req.body.jobTitle,
+      company: req.body.company,
+      whereMet: req.body.whereMet,
+      whenMet: req.body.whenMet,
+      lastMessaged: req.body.lastMessaged,
+      numConversations: parseInt(req.body.numConversations) || 0,
+      comments: req.body.comments,
+      twitter: req.body.twitter,
+      linkedin: req.body.linkedin
+    };
+    db.collection('contacts').insertOne(contact, (err) => {
+      if (err) return console.error(err);
+      res.redirect('/profile');
+    });
+  });
 
-    app.post('/messages', (req, res) => {
-      db.collection('messages').save({name: req.body.name, msg: req.body.msg, thumbUp: 0, thumbDown:0}, (err, result) => {
-        if (err) return console.log(err)
-        console.log('saved to database')
-        res.redirect('/profile')
-      })
-    })
+  // EDIT CONTACT /////////////////////////////////////////////////////////////////////
+  app.put('/contacts/:id', isLoggedIn, (req, res) => {
+    const contactId = new require('mongodb').ObjectID(req.params.id);
+    const updatedContact = {
+      name: req.body.name,
+      jobTitle: req.body.jobTitle,
+      company: req.body.company,
+      whereMet: req.body.whereMet,
+      whenMet: req.body.whenMet,
+      lastMessaged: req.body.lastMessaged,
+      numConversations: parseInt(req.body.numConversations) || 0,
+      comments: req.body.comments,
+      twitter: req.body.twitter,
+      linkedin: req.body.linkedin
+    };
+    db.collection('contacts').updateOne(
+      { _id: contactId, userId: req.user._id },
+      { $set: updatedContact },
+      (err) => {
+        if (err) return console.error(err);
+        res.send("contact updated!");
+      }
+    );
+  });
 
-    app.put('/messages', (req, res) => {
-      db.collection('messages')
-      .findOneAndUpdate({name: req.body.name, msg: req.body.msg}, {
-        $set: {
-          thumbUp:req.body.thumbUp + 1
+
+  // DELETE CONTACT /////////////////////////////////////////////////////////////////////
+  app.delete('/contacts/:id', isLoggedIn, (req, res) => {
+    const contactId = new require('mongodb').ObjectID(req.params.id);
+    db.collection('contacts').deleteOne({ _id: contactId, userId: req.user._id }, (err) => {
+        if (err) {
+            console.error(err);
+            return res.send('Error deleting contact');
         }
-      }, {
-        sort: {_id: -1},
-        upsert: true
-      }, (err, result) => {
-        if (err) return res.send(err)
-        res.send(result)
-      })
-    })
-
-    app.delete('/messages', (req, res) => {
-      db.collection('messages').findOneAndDelete({name: req.body.name, msg: req.body.msg}, (err, result) => {
-        if (err) return res.send(500, err)
-        res.send('Message deleted!')
-      })
-    })
-
-// =============================================================================
-// AUTHENTICATE (FIRST LOGIN) ==================================================
-// =============================================================================
-
-    // locally --------------------------------
-        // LOGIN ===============================
-        // show the login form
-        app.get('/login', function(req, res) {
-            res.render('login.ejs', { message: req.flash('loginMessage') });
-        });
-
-        // process the login form
-        app.post('/login', passport.authenticate('local-login', {
-            successRedirect : '/profile', // redirect to the secure profile section
-            failureRedirect : '/login', // redirect back to the signup page if there is an error
-            failureFlash : true // allow flash messages
-        }));
-
-        // SIGNUP =================================
-        // show the signup form
-        app.get('/signup', function(req, res) {
-            res.render('signup.ejs', { message: req.flash('signupMessage') });
-        });
-
-        // process the signup form
-        app.post('/signup', passport.authenticate('local-signup', {
-            successRedirect : '/profile', // redirect to the secure profile section
-            failureRedirect : '/signup', // redirect back to the signup page if there is an error
-            failureFlash : true // allow flash messages
-        }));
-
-// =============================================================================
-// UNLINK ACCOUNTS =============================================================
-// =============================================================================
-// used to unlink accounts. for social accounts, just remove the token
-// for local account, remove email and password
-// user account will stay active in case they want to reconnect in the future
-
-    // local -----------------------------------
-    app.get('/unlink/local', isLoggedIn, function(req, res) {
-        var user            = req.user;
-        user.local.email    = undefined;
-        user.local.password = undefined;
-        user.save(function(err) {
-            res.redirect('/profile');
-        });
+        res.send("contact deleted");
     });
+});
 
+
+
+  // AUTHENTICATION ROUTES ===================================================
+  // Login
+  app.get('/login', (req, res) => {
+    res.render('login.ejs', { message: req.flash('loginMessage') });
+  });
+
+  app.post('/login', passport.authenticate('local-login', {
+    successRedirect: '/profile',
+    failureRedirect: '/login',
+    failureFlash: true
+  }));
+
+  // Signup
+  app.get('/signup', (req, res) => {
+    res.render('signup.ejs', { message: req.flash('signupMessage') });
+  });
+
+  app.post('/signup', passport.authenticate('local-signup', {
+    successRedirect: '/profile',
+    failureRedirect: '/signup',
+    failureFlash: true
+  }));
+
+  // Logout
+  app.get('/logout', (req, res) => {
+    req.logout(() => {
+      console.log('User has logged out!');
+    });
+    res.redirect('/');
+  });
 };
 
-// route middleware to ensure user is logged in
+// Middleware to check if the user is logged in
 function isLoggedIn(req, res, next) {
-    if (req.isAuthenticated())
-        return next();
-
-    res.redirect('/');
+  if (req.isAuthenticated()) {
+    return next();
+  }
+  res.redirect('/');
 }
