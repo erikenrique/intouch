@@ -17,8 +17,6 @@ var session      = require('express-session');
 
 require('dotenv').config()
 
-var configDB = require('./config/database.js');
-
 var db
 
 // configuration ===============================================================
