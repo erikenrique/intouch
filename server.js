@@ -15,7 +15,7 @@ var cookieParser = require('cookie-parser');
 var bodyParser   = require('body-parser');
 var session      = require('express-session');
 
-require('dontenv').config()
+require('dotenv').config()
 
 var configDB = require('./config/database.js');
 
