@@ -1,4 +1,4 @@
-# intouch -- DEMO [HERE](https://intouch-n7mw.onrender.com/)
+# intouch -- demo [here](https://intouch-n7mw.onrender.com/)
 
 intouch is a web application designed to help users manage their contacts and monitor the status of their relationships. It provides a centralized platform to keep track of personal and professional connections, ensuring users stay connected and engaged.
 
